@@ -2,9 +2,10 @@
 Contributors: printfriendly, joostdevalk, jrf, rozroz
 Tags: print, pdf, email, woocommerce print, woocommerce pdf, print plugin, print button, pdf plugin, pdf button
 Requires at least: 4.9
-Tested up to: 6.6
-Stable tag: 5.5.6
-
+Tested up to: 6.9
+Stable tag: 5.5.8
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 The #1 Print, PDF, Email button. Stylish, full featured, customizable. Add custom header, footer, and more.
 
@@ -143,6 +144,12 @@ Use the option in the Plugin settings. [See how](https://support.printfriendly.c
 
 
 == Changelog ==
+
+= 5.5.8 =
+* Maintenance release.
+
+= 5.5.7 =
+* Added GPL license to plugin header and readme.
 
 = 5.5.6 =
 * Bugfixes
