@@ -5,7 +5,7 @@
     Plugin URI: https://www.printfriendly.com
     Description: PrintFriendly & PDF button for your website. Optimizes your pages and brand for print, pdf, and email.
     Name and URL are included to ensure repeat visitors and new visitors when printed versions are shared.
-    Version: 5.5.8
+    Version: 5.5.9
     Author: Print, PDF, & Email by PrintFriendly
     Author URI: https://www.printfriendly.com
     License: GPLv2 or later
@@ -42,7 +42,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          *
          * @var string
          */
-        var $plugin_version = '5.5.8';
+        var $plugin_version = '5.5.9';
         /**
          * The hook, used for text domain as well as hooks on pages and in get requests for admin.
          *
@@ -850,8 +850,8 @@ if (! class_exists('PrintFriendly_WordPress')) {
 
             $css = $input['custom_css'];
 
-            // remove the <style> </style> tags.
-            $css = str_replace(array( '<style>', '</style>' ), '', $css);
+            // Strip all HTML/script tags before further sanitization.
+            $css = wp_strip_all_tags($css);
             $valid_input['custom_css'] = sanitize_textarea_field($css);
 
 
@@ -1645,7 +1645,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
         {
             $custom_css = $this->getVal('custom_css');
             if (!empty($custom_css) && 'inline_tag' === $this->getVal('css_include_via')) {
-                return sprintf('<printfriendly-css style="display: none;">%s</printfriendly-css>', html_entity_decode($custom_css));
+                return sprintf('<printfriendly-css style="display: none;">%s</printfriendly-css>', esc_html($custom_css));
             }
         }
 
@@ -1680,7 +1680,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
         {
             $file = $this->getVal('custom_css_url_pro');
 
-            $custom_css_old = html_entity_decode($this->getVal('custom_css'));
+            $custom_css_old = $this->getVal('custom_css');
 
             // return the old file if the CSS has not changed.
             if ($custom_css_old === $css && ! empty($file)) {
