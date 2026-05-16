@@ -2,8 +2,8 @@
 Contributors: printfriendly, joostdevalk, jrf, rozroz
 Tags: print, pdf, email, woocommerce print, woocommerce pdf, print plugin, print button, pdf plugin, pdf button
 Requires at least: 4.9
-Tested up to: 6.9
-Stable tag: 5.5.9
+Tested up to: 7.0
+Stable tag: 5.5.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -144,6 +144,9 @@ Use the option in the Plugin settings. [See how](https://support.printfriendly.c
 
 
 == Changelog ==
+
+= 5.5.10 =
+* Tested against 7.0
 
 = 5.5.9 =
 * Security fix: prevent stored XSS via Custom CSS option.
