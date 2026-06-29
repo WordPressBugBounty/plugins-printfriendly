@@ -1,9 +1,9 @@
-=== Print, PDF, Email by PrintFriendly ===
+=== Print, PDF & Email by PrintFriendly ===
 Contributors: printfriendly, joostdevalk, jrf, rozroz
-Tags: print, pdf, email, woocommerce print, woocommerce pdf, print plugin, print button, pdf plugin, pdf button
+Tags: print, pdf, email, print button, pdf button
 Requires at least: 4.9
 Tested up to: 7.0
-Stable tag: 5.5.10
+Stable tag: 5.5.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -144,6 +144,10 @@ Use the option in the Plugin settings. [See how](https://support.printfriendly.c
 
 
 == Changelog ==
+
+= 5.5.11 =
+* Security fix: prevent stored XSS via the Content Position CSS (button alignment) option (CVE-2026-9738).
+* Hardening: consistently escape option output across the settings screens.
 
 = 5.5.10 =
 * Tested against 7.0

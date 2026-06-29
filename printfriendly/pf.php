@@ -5,7 +5,7 @@
     Plugin URI: https://www.printfriendly.com
     Description: PrintFriendly & PDF button for your website. Optimizes your pages and brand for print, pdf, and email.
     Name and URL are included to ensure repeat visitors and new visitors when printed versions are shared.
-    Version: 5.5.10
+    Version: 5.5.11
     Author: Print, PDF, & Email by PrintFriendly
     Author URI: https://www.printfriendly.com
     License: GPLv2 or later
@@ -13,6 +13,10 @@
     Domain Path: /languages
     Text Domain: printfriendly
 */
+
+if (! defined('ABSPATH')) {
+    exit; // Exit if accessed directly.
+}
 
 // phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
 // phpcs:disable Squiz.Classes.ValidClassName.NotCamelCaps
@@ -42,7 +46,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          *
          * @var string
          */
-        var $plugin_version = '5.5.10';
+        var $plugin_version = '5.5.11';
         /**
          * The hook, used for text domain as well as hooks on pages and in get requests for admin.
          *
@@ -364,6 +368,10 @@ if (! class_exists('PrintFriendly_WordPress')) {
         {
             $css = $this->getVal('content_position_css');
             if (! empty($css)) {
+                // Defense in depth: strip any HTML tags (e.g. a stored "</style>"
+                // breakout) before echoing into the <style> element. wp_strip_all_tags()
+                // leaves bare ">" characters intact, so CSS child combinators keep working.
+                $css = wp_strip_all_tags($css);
                 return sprintf('<style type="text/css" id="pf-button-css">%s</style>', $css);
             }
             return null;
@@ -385,10 +393,16 @@ if (! class_exists('PrintFriendly_WordPress')) {
             }
             ?>
         <style type="text/css" id="pf-main-css">
-            <?php echo $this->get_main_css(); ?>
+            <?php
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Inline CSS assembled from integer- and hex-validated option values.
+            echo $this->get_main_css();
+            ?>
         </style>
 
-            <?php echo $this->get_content_position_css_tag(); ?>
+            <?php
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Returns a <style> tag whose CSS is run through wp_strip_all_tags() inside the method.
+            echo $this->get_content_position_css_tag();
+            ?>
 
         <style type="text/css" id="pf-excerpt-styles">
           .pf-button.pf-button-excerpt {
@@ -413,12 +427,16 @@ if (! class_exists('PrintFriendly_WordPress')) {
                 $image_url = '';
             }
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Returns markup whose dynamic attributes are escaped with esc_attr() inside the method.
             echo $this->getSelectorsFromCustomCSS();
 
             // Currently we use v3 for both: normal and password protected sites
             ?>
      <script type="text/javascript" id="pf_script">
-            <?php echo $this->get_analytics_code(); ?>
+            <?php
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline analytics JavaScript; contains no user input.
+            echo $this->get_analytics_code();
+            ?>
           var pfHeaderImgUrl = '<?php echo esc_js(esc_url($image_url)); ?>';
           var pfHeaderTagline = '<?php echo esc_js($tagline); ?>';
           var pfdisableClickToDel = '<?php echo esc_js($this->getVal('click_to_delete')); ?>';
@@ -431,6 +449,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
           var pfDisablePrint = '<?php echo esc_js($this->getVal('print')); ?>';
 
             <?php
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Returns a JS variable whose value is escaped via esc_js( esc_url() ) inside the method.
                 echo $this->get_custom_css_js_var();
             ?>
 
@@ -444,8 +463,9 @@ if (! class_exists('PrintFriendly_WordPress')) {
             });
         })(jQuery);
         </script>
-      <script defer src='https://cdn.printfriendly.com/printfriendly.js'></script>
             <?php
+            wp_enqueue_script('printfriendly-sdk', 'https://cdn.printfriendly.com/printfriendly.js', array(), null, true);
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Returns a custom element whose content is escaped via esc_html() inside the method.
             echo $this->get_custom_css_tag();
             ?>
 
@@ -661,8 +681,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          */
         function init()
         {
-            // Allow for localization
-            load_plugin_textdomain('printfriendly', false, basename(dirname(__FILE__)) . '/languages');
+            // Translations for WordPress.org-hosted plugins load automatically since WP 4.6; no manual textdomain loading is required.
             // Register our option array
             register_setting($this->option_name, $this->option_name, array( 'sanitize_callback' => array(&$this, 'options_validate') ));
         }
@@ -779,6 +798,15 @@ if (! class_exists('PrintFriendly_WordPress')) {
             }
 
             if (! isset($input['button_alignment_method']) || 'css' !== $input['button_alignment_method']) {
+                $valid_input['content_position_css'] = '';
+            } elseif (isset($input['content_position_css'])) {
+                // Strip all HTML/PHP tags (including any "</style>" breakout) before
+                // storing, mirroring the Custom CSS sanitization below. A bare ">"
+                // (CSS child combinator) is preserved because strip_tags() only removes
+                // complete "<...>" sequences.
+                $position_css = wp_strip_all_tags($input['content_position_css']);
+                $valid_input['content_position_css'] = sanitize_textarea_field($position_css);
+            } else {
                 $valid_input['content_position_css'] = '';
             }
 
@@ -914,7 +942,8 @@ if (! class_exists('PrintFriendly_WordPress')) {
 
             // set the current tab from where the settings were saved from
             if (isset($_POST['tab'])) {
-                set_transient('pf-tab', $_POST['tab'], 5);
+                // Nonce already verified via check_admin_referer() at the top of this method.
+                set_transient('pf-tab', sanitize_text_field(wp_unslash($_POST['tab'])), 5);
             }
 
             // save the categories as comma-separated
@@ -952,7 +981,8 @@ if (! class_exists('PrintFriendly_WordPress')) {
                 }
 
                 if (! wp_script_is('clipboard')) {
-                    wp_enqueue_script('clipboard', plugins_url('assets/js/lib/clipboard.min.js', __FILE__));
+                    // Use the clipboard library bundled with WordPress core (registered since 4.9).
+                    wp_enqueue_script('clipboard');
                 }
 
                 if (! wp_script_is('select2')) {
@@ -1307,7 +1337,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
                 $this->options['pro_email'] = get_bloginfo('admin_email');
 
                 $url = get_bloginfo('url');
-                $parsed_url = parse_url($url);
+                $parsed_url = wp_parse_url($url);
                 $this->options['pro_domain'] = $parsed_url['host'];
             }
 
@@ -1338,11 +1368,13 @@ if (! class_exists('PrintFriendly_WordPress')) {
                 $value = $name;
             }
 
-            $var = '<input id="' . $name . '" class="radio" name="' . $this->option_name . '[button_type]" type="radio" value="' . $value . '" ' . $this->checked('button_type', $value, false) . '/>';
+            $var = '<input id="' . esc_attr($name) . '" class="radio" name="' . esc_attr($this->option_name) . '[button_type]" type="radio" value="' . esc_attr($value) . '" ' . $this->checked('button_type', $value, false) . '/>';
             $button = $this->button($name);
             if (! empty($button)) {
-                echo '<label for="' . $name . '">' . $var . $button . '</label>';
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $name escaped via esc_attr(); $var and $button are pre-escaped HTML fragments.
+                echo '<label for="' . esc_attr($name) . '">' . $var . $button . '</label>';
             } else {
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Pre-escaped HTML fragment assembled above.
                 echo $var;
             }
 
@@ -1363,8 +1395,11 @@ if (! class_exists('PrintFriendly_WordPress')) {
             $value = "https://cdn.printfriendly.com/{$value}";
             ?>
       <label for="<?php echo esc_attr($value); ?>">
-        <input type="radio" id="<?php echo esc_attr($value); ?>" name="<?php echo $this->option_name; ?>[custom_button_icon]" value="<?php echo $value; ?>" <?php $this->checked('custom_button_icon', $value); ?>>
-            <?php echo $button; ?>
+        <input type="radio" id="<?php echo esc_attr($value); ?>" name="<?php echo esc_attr($this->option_name); ?>[custom_button_icon]" value="<?php echo esc_url($value); ?>" <?php $this->checked('custom_button_icon', $value); ?>>
+            <?php
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Button markup built with esc_url()/esc_html() inside button().
+            echo $button;
+            ?>
       </label>
             <?php
         }
@@ -1479,12 +1514,14 @@ if (! class_exists('PrintFriendly_WordPress')) {
 
             $button_preview = sprintf('<span><span id="pf-custom-button-preview" class="pf-button-img">%s</span><span id="printfriendly-text2" class="pf-button-text" style="%s">%s</span></span>', $img, $style, $this->esc_html_if_needed($button_text));
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Assembled from esc_url()/esc_html_if_needed() parts and a hex-validated text_color.
             echo $button_preview;
         }
 
         function echoVal($option, $default = '')
         {
-            echo $this->getVal($option, $default);
+            // Always escape for the HTML attribute context this helper is used in.
+            echo esc_attr($this->getVal($option, $default));
         }
 
         function getVal($option, $default = null)
@@ -1518,6 +1555,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
             if ($this->options[ $val ] == $check_against) {
                 $result = ' checked="checked" ';
                 if ($echo) {
+                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static ' checked="checked" ' attribute string.
                     echo $result;
                 }
             }
@@ -1534,9 +1572,9 @@ if (! class_exists('PrintFriendly_WordPress')) {
         {
 			// phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralText
             $label = ( ! empty($label) ? $label : __(ucfirst($name), 'printfriendly') );
-            echo '<label' . ( ! empty($labelid) ? ' id=' . $labelid : '' ) . '><input type="checkbox" class="show_list" name="' . $this->option_name . '[show_on_' . $name . ']" value="on" ';
+            echo '<label' . ( ! empty($labelid) ? ' id="' . esc_attr($labelid) . '"' : '' ) . '><input type="checkbox" class="show_list" name="' . esc_attr($this->option_name) . '[show_on_' . esc_attr($name) . ']" value="on" ';
             $this->checked('show_on_' . $name, 'on');
-            echo ' />' . $label . "</label>\r\n";
+            echo ' />' . esc_html($label) . "</label>\r\n";
         }
 
 
@@ -1621,7 +1659,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          */
         function esc_html_if_needed($input)
         {
-            $final = esc_html(strip_tags($input));
+            $final = esc_html(wp_strip_all_tags($input));
             return $final;
         }
 
@@ -1723,7 +1761,8 @@ if (! class_exists('PrintFriendly_WordPress')) {
             // upgrading from a version that was using urls instead of the textarea?
             $css_url = $this->getVal('custom_css_url');
             if (! empty($css_url)) {
-                return sprintf(__('You are currently using %1$s%2$s%3$s. You can copy its contents into the textbox if you want to update the styles.', 'printfriendly'), '<a href="' . $css_url . '" target="_blank">', $css_url, '</a>');
+                // translators: %1$s is an opening <a> tag, %2$s is the CSS file URL, %3$s is the closing </a> tag.
+                return sprintf(__('You are currently using %1$s%2$s%3$s. You can copy its contents into the textbox if you want to update the styles.', 'printfriendly'), '<a href="' . esc_url($css_url) . '" target="_blank">', esc_html($css_url), '</a>');
             }
 
             return null;
@@ -1817,6 +1856,7 @@ function pf_show_link()
  *
  * @return string returns a button to be printed.
  */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Public template tag (since 3.0); renaming would break themes and shortcodes that call it.
 function pf_default_button()
 {
     global $printfriendly;
@@ -1830,6 +1870,7 @@ function pf_default_button()
  *
  * @return string returns a button that prints the entire page it is on.
  */
+// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- Public template tag (since 5.1); renaming would break themes and shortcodes that call it.
 function pf_current_page_button()
 {
     global $printfriendly;
