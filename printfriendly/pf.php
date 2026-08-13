@@ -5,7 +5,7 @@
     Plugin URI: https://www.printfriendly.com
     Description: PrintFriendly & PDF button for your website. Optimizes your pages and brand for print, pdf, and email.
     Name and URL are included to ensure repeat visitors and new visitors when printed versions are shared.
-    Version: 5.5.11
+    Version: 5.5.12
     Author: Print, PDF, & Email by PrintFriendly
     Author URI: https://www.printfriendly.com
     License: GPLv2 or later
@@ -46,7 +46,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          *
          * @var string
          */
-        var $plugin_version = '5.5.11';
+        var $plugin_version = '5.5.12';
         /**
          * The hook, used for text domain as well as hooks on pages and in get requests for admin.
          *
