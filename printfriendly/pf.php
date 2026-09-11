@@ -5,7 +5,7 @@
     Plugin URI: https://www.printfriendly.com
     Description: PrintFriendly & PDF button for your website. Optimizes your pages and brand for print, pdf, and email.
     Name and URL are included to ensure repeat visitors and new visitors when printed versions are shared.
-    Version: 5.5.12
+    Version: 5.5.13
     Author: Print, PDF, & Email by PrintFriendly
     Author URI: https://www.printfriendly.com
     License: GPLv2 or later
@@ -46,7 +46,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          *
          * @var string
          */
-        var $plugin_version = '5.5.12';
+        var $plugin_version = '5.5.13';
         /**
          * The hook, used for text domain as well as hooks on pages and in get requests for admin.
          *
@@ -70,13 +70,20 @@ if (! class_exists('PrintFriendly_WordPress')) {
          *
          * @var int
          */
-        var $db_version = 21;
+        var $db_version = 22;
         /**
          * Settings page, used within the plugin to reliably load the plugins admin JS and CSS files only on the admin page.
          *
          * @var string
          */
         var $settings_page = '';
+        /**
+         * Pro card v2 controller. Only set when PRINTFRIENDLY_PRO_CARD_V2 is on;
+         * null means the legacy views/pro.php card is in use.
+         *
+         * @var PrintFriendly_Pro_Card|null
+         */
+        var $pro_card = null;
         /**
          * List of all buttons with their attributes.
          *
@@ -174,6 +181,13 @@ if (! class_exists('PrintFriendly_WordPress')) {
             add_filter('plugin_action_links', array(&$this, 'filter_plugin_actions'), 10, 2);
             add_filter('plugin_row_meta', array(&$this, 'additional_links'), 10, 2);
             add_filter('wp_dropdown_cats', array( &$this, 'wp_dropdown_cats_multiple' ), 10, 2);
+
+            // Pro card v2, dark launched behind PRINTFRIENDLY_PRO_CARD_V2. Off by default,
+            // in which case nothing below runs and views/pro.php renders as before.
+            require_once PRINTFRIENDLY_BASEPATH . '/includes/class-printfriendly-pro-card.php';
+            if (PrintFriendly_Pro_Card::enabled()) {
+                $this->pro_card = new PrintFriendly_Pro_Card($this->plugin_version, $this->hook, __FILE__);
+            }
         }
 
         /**
@@ -464,6 +478,10 @@ if (! class_exists('PrintFriendly_WordPress')) {
         })(jQuery);
         </script>
             <?php
+            // $ver is null on purpose, and Plugin Check's MissingVersion warning
+            // here is a false positive: null appends no query string, while false
+            // would append WordPress's own version to a third-party CDN URL we do
+            // not control or version. The CDN handles its own cache busting.
             wp_enqueue_script('printfriendly-sdk', 'https://cdn.printfriendly.com/printfriendly.js', array(), null, true);
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Returns a custom element whose content is escaped via esc_html() inside the method.
             echo $this->get_custom_css_tag();
@@ -985,11 +1003,41 @@ if (! class_exists('PrintFriendly_WordPress')) {
                     wp_enqueue_script('clipboard');
                 }
 
-                if (! wp_script_is('select2')) {
-                    wp_enqueue_script('select2', plugins_url('assets/js/lib/select2.min.js', __FILE__));
+                // 'registered', not the default 'enqueued': wp_enqueue_script()
+                // with a $src is a no-op on the registration when the handle
+                // already exists, so asking the enqueued question meant that a
+                // plugin which had registered select2 without enqueuing it left
+                // us passing a version and deps that WordPress silently dropped.
+                // Skipping outright is honest, and pf-admin's own select2
+                // dependency pulls whichever copy is registered.
+                if (! wp_script_is('select2', 'registered')) {
+                    // Versioned with the plugin, like every other asset we ship.
+                    // Without it WordPress falls back to appending its own version,
+                    // so a new select2 build would sit behind browser caches until
+                    // WordPress itself updated. jQuery is an explicit dependency
+                    // because the bundled file calls jQuery at load time.
+                    //
+                    // Still enqueued rather than only registered. Both branches
+                    // below do enqueue something that depends on select2, so
+                    // registering would work today, but this function has already
+                    // been bitten once by exactly that reasoning: see the comment
+                    // on wp_enqueue_script('pf-admin'), added after the v2 branch
+                    // left pf-admin registered with nothing pulling it in and the
+                    // settings page lost its tabs, colour picker and select2.
+                    wp_enqueue_script(
+                        'select2',
+                        plugins_url('assets/js/lib/select2.min.js', __FILE__),
+                        array('jquery'),
+                        $this->plugin_version,
+                        false
+                    );
                 }
 
-                wp_register_script('pf-admin', plugins_url('assets/js/admin.js', __FILE__), array( 'jquery', 'jquery-ui-tabs', 'jquery-ui-accordion', 'media-upload', 'wp-color-picker', 'clipboard', 'select2' ), $this->plugin_version);
+                // $in_footer stated rather than left to the default. It is false,
+                // not true: these run on the settings screen alongside header
+                // output that expects them, so this records today's behaviour
+                // instead of quietly moving it.
+                wp_register_script('pf-admin', plugins_url('assets/js/admin.js', __FILE__), array( 'jquery', 'jquery-ui-tabs', 'jquery-ui-accordion', 'media-upload', 'wp-color-picker', 'clipboard', 'select2' ), $this->plugin_version, false);
                 wp_localize_script(
                     'pf-admin',
                     'pf_config',
@@ -1002,26 +1050,36 @@ if (! class_exists('PrintFriendly_WordPress')) {
                     )
                 );
 
-                wp_register_script('pf-admin-pro', plugins_url('assets/js/admin_pro.js', __FILE__), array( 'pf-admin' ), $this->plugin_version);
+                if ($this->pro_card) {
+                    // v2 card: server-side status, no browser-side trial script.
+                    // pf-admin is only registered above, and in the legacy branch it
+                    // rides in as a dependency of pf-admin-pro. Nothing pulls it in
+                    // here, so enqueue it directly or the settings page loses its
+                    // tabs, accordions, colour picker, select2 and clipboard.
+                    wp_enqueue_script('pf-admin');
+                    $this->pro_card->enqueue_assets();
+                } else {
+                    wp_register_script('pf-admin-pro', plugins_url('assets/js/admin_pro.js', __FILE__), array( 'pf-admin' ), $this->plugin_version, false);
 
-                wp_localize_script(
-                    'pf-admin-pro',
-                    'pf_config',
-                    array(
-                        'nonce' => wp_create_nonce($this->hook . $this->plugin_version),
-                        'action' => $this->hook,
-                        'i10n' => array(
-                            'activation' => __('Activation', 'printfriendly'),
-                            'check_status' => __('Checking status', 'printfriendly'),
-                            'activate' => __('Activate', 'printfriendly'),
-                            'active_trial' => __('Active Trial', 'printfriendly'),
-                            'active' => __('Active', 'printfriendly'),
-                            'expired' => __('Expired', 'printfriendly'),
-                            'connection' => __('Please check Internet connection.', 'printfriendly'),
-                        ),
-                    )
-                );
-                wp_enqueue_script('pf-admin-pro');
+                    wp_localize_script(
+                        'pf-admin-pro',
+                        'pf_config',
+                        array(
+                            'nonce' => wp_create_nonce($this->hook . $this->plugin_version),
+                            'action' => $this->hook,
+                            'i10n' => array(
+                                'activation' => __('Activation', 'printfriendly'),
+                                'check_status' => __('Checking status', 'printfriendly'),
+                                'activate' => __('Activate', 'printfriendly'),
+                                'active_trial' => __('Active Trial', 'printfriendly'),
+                                'active' => __('Active', 'printfriendly'),
+                                'expired' => __('Expired', 'printfriendly'),
+                                'connection' => __('Please check Internet connection.', 'printfriendly'),
+                            ),
+                        )
+                    );
+                    wp_enqueue_script('pf-admin-pro');
+                }
 
                 wp_enqueue_style('pf-bulma', plugins_url('assets/css/lib/bulma.prefixed.min.css', __FILE__), array( 'wp-color-picker' ), $this->plugin_version);
                 wp_enqueue_style('pf-select2', plugins_url('assets/css/lib/select2.min.css', __FILE__), array(), $this->plugin_version);
@@ -1088,6 +1146,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
                 'button_type' => 'buttons/printfriendly-pdf-button.png',
                 'content_position' => 'left',
                 'button_alignment_method' => 'default',
+                'content_position_css' => '',
                 'content_placement' => 'after',
                 'custom_button_icon' => 'https://cdn.printfriendly.com/icons/printfriendly-icon-md.png',
                 'custom_button_text' => 'custom-text',
@@ -1115,6 +1174,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
                 'enable_google_analytics' => 'no',
                 'enable_error_reporting' => 'yes',
                 'pf_algo' => 'wp',
+                'pf_algo_css_content' => 'original',
                 'images-size' => 'full-size',
                 'show_hidden_content' => 'no',
                 'css_include_via' => 'inline_tag',
@@ -1346,6 +1406,18 @@ if (! class_exists('PrintFriendly_WordPress')) {
                     $this->options['css_include_via'] = 'inline_tag';
                 } else {
                     $this->options['css_include_via'] = 'file';
+                }
+            }
+
+            if ($this->options['db_version'] < 22) {
+                // Backfill options that set_defaults() did not know about. Installs that
+                // never saved the settings form were missing both keys, which produced
+                // "Undefined array key" warnings on the settings page.
+                if (! isset($this->options['pf_algo_css_content'])) {
+                    $this->options['pf_algo_css_content'] = 'original';
+                }
+                if (! isset($this->options['content_position_css'])) {
+                    $this->options['content_position_css'] = '';
                 }
             }
 
@@ -1755,6 +1827,12 @@ if (! class_exists('PrintFriendly_WordPress')) {
         /**
          * If upgrading from a previous version that was using urls instead of the textarea
          * it will return an appropriate message for the user.
+         *
+         * Returns an empty string when no legacy custom_css_url option is set, so the
+         * result can be passed straight to wp_kses_post() without a null-argument
+         * deprecation on PHP 8.1+.
+         *
+         * @return string
          */
         function get_custom_css_upgrade_message()
         {
@@ -1765,7 +1843,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
                 return sprintf(__('You are currently using %1$s%2$s%3$s. You can copy its contents into the textbox if you want to update the styles.', 'printfriendly'), '<a href="' . esc_url($css_url) . '" target="_blank">', esc_html($css_url), '</a>');
             }
 
-            return null;
+            return '';
         }
 
         /**

@@ -10,7 +10,7 @@ $domain = ( isset($pf_urlInfo['host']) ? $pf_urlInfo['host'] : '' );
 $pf_license_date = $this->getVal('license_date', '');
 
 if (! empty($pf_license_date)) {
-    $pf_license_date = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $pf_license_date / 1000 + get_option('gmt_offset') * HOUR_IN_SECONDS);
+    $pf_license_date = date_i18n(get_option('date_format') . ' ' . get_option('time_format'), (int) ($pf_license_date / 1000 + get_option('gmt_offset') * HOUR_IN_SECONDS));
 }
 
 ?>

@@ -3,7 +3,7 @@ Contributors: printfriendly, joostdevalk, jrf, rozroz
 Tags: print, pdf, email, print button, pdf button
 Requires at least: 4.9
 Tested up to: 7.1
-Stable tag: 5.5.12
+Stable tag: 5.5.13
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -144,6 +144,10 @@ Use the option in the Plugin settings. [See how](https://support.printfriendly.c
 
 
 == Changelog ==
+
+= 5.5.13 =
+* New: the settings screen now shows your Print Button Pro plan, and you can start a 30 day free trial without leaving WordPress.
+* Fix: the bundled select2 library is versioned with the plugin, so updates are no longer held behind browser caches.
 
 = 5.5.12 =
 * Tested against WordPress 7.1

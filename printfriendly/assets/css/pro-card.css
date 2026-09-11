@@ -1,0 +1,478 @@
+/* Pro card v2 (views/pro-card.php). Scoped to #pf-pro-card so nothing here
+   leaks into the rest of the settings page. Values mirror WordPress admin:
+   ink #1d2327, body #50575e, muted #8c8f94, rules #dcdcde / #c3c4c7. */
+
+#pf-pro-card {
+	background: #ffffff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 22px 24px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	color: #1d2327;
+}
+
+#pf-pro-card.pf-card-state-offer {
+	padding: 0;
+	overflow: hidden;
+	gap: 0;
+}
+
+#pf-pro-card.pf-card-state-offer .pf-card-stub,
+#pf-pro-card.pf-card-state-offer .pf-card-notice {
+	margin: 16px 24px 0;
+}
+
+#pf-pro-card.pf-card-state-offer .pf-card-rule {
+	margin: 0 24px;
+}
+
+#pf-pro-card.pf-card-state-offer .pf-card-footer {
+	margin: 12px 24px 18px;
+}
+
+/* Status row */
+
+#pf-pro-card .pf-card-status {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+#pf-pro-card .pf-card-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.4;
+	border: 1px solid transparent;
+	box-sizing: border-box;
+}
+
+#pf-pro-card .pf-card-pill-free {
+	background: #f0f6fc;
+	border-color: #c5d9ed;
+	color: #2271b1;
+}
+
+#pf-pro-card .pf-card-pill-trial,
+#pf-pro-card .pf-card-pill-pro {
+	background: #edfaef;
+	border-color: #a7e3b2;
+	color: #1d7a2c;
+}
+
+#pf-pro-card .pf-card-pill-pastdue {
+	background: #fcf0f1;
+	border-color: #f1b0b7;
+	color: #8a1c24;
+}
+
+#pf-pro-card .pf-card-pill-cancelled {
+	background: #f0f0f1;
+	border-color: #c3c4c7;
+	color: #50575e;
+}
+
+#pf-pro-card .pf-card-context {
+	font-size: 12px;
+	color: #8c8f94;
+}
+
+/* Text */
+
+#pf-pro-card .pf-card-headline {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1.2;
+	letter-spacing: -.015em;
+	color: #1d2327;
+}
+
+#pf-pro-card .pf-card-headline-lg {
+	font-size: 30px;
+	line-height: 1.15;
+	letter-spacing: -.02em;
+}
+
+#pf-pro-card .pf-card-line {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.5;
+	color: #50575e;
+}
+
+#pf-pro-card .pf-card-line strong {
+	font-weight: 600;
+	color: #1d2327;
+}
+
+#pf-pro-card .pf-card-line-lg {
+	font-size: 15px;
+}
+
+#pf-pro-card .pf-card-line-sm {
+	font-size: 13px;
+}
+
+#pf-pro-card .pf-card-fine {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.5;
+	color: #8c8f94;
+}
+
+/* Actions. The yellow button is always last in source so it sits on the right. */
+
+#pf-pro-card .pf-card-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+#pf-pro-card .pf-card-btn,
+#pf-pro-card .pf-card-btn:hover,
+#pf-pro-card .pf-card-btn:focus {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 0 18px;
+	border-radius: 5px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+	box-sizing: border-box;
+	cursor: pointer;
+	transition: background-color .12s ease, border-color .12s ease;
+}
+
+#pf-pro-card .pf-card-btn:focus {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+#pf-pro-card .pf-card-btn-yellow,
+#pf-pro-card .pf-card-btn-yellow:hover,
+#pf-pro-card .pf-card-btn-yellow:focus {
+	background: #ffc42e;
+	border: 1px solid #e8a700;
+	color: #1a1400;
+	font-size: 15px;
+	font-weight: 700;
+	padding: 0 22px;
+}
+
+#pf-pro-card .pf-card-btn-yellow:hover {
+	background: #f5b81c;
+}
+
+#pf-pro-card .pf-card-btn-lg,
+#pf-pro-card .pf-card-btn-lg:hover,
+#pf-pro-card .pf-card-btn-lg:focus {
+	min-height: 48px;
+	font-size: 16px;
+	padding: 0 26px;
+}
+
+#pf-pro-card .pf-card-btn-secondary,
+#pf-pro-card .pf-card-btn-secondary:hover,
+#pf-pro-card .pf-card-btn-secondary:focus {
+	background: #f6f7f7;
+	border: 1px solid #2271b1;
+	color: #2271b1;
+	border-radius: 3px;
+}
+
+#pf-pro-card .pf-card-btn-secondary:hover {
+	background: #f0f0f1;
+	color: #135e96;
+	border-color: #135e96;
+}
+
+#pf-pro-card .pf-card-btn-ghost,
+#pf-pro-card .pf-card-btn-ghost:hover,
+#pf-pro-card .pf-card-btn-ghost:focus {
+	background: transparent;
+	border: 1px solid #c3c4c7;
+	color: #1d2327;
+}
+
+#pf-pro-card .pf-card-btn-ghost:hover {
+	background: #f6f7f7;
+	border-color: #8c8f94;
+}
+
+#pf-pro-card .pf-card-btn.is-busy {
+	opacity: .6;
+	pointer-events: none;
+}
+
+/* Footer */
+
+#pf-pro-card .pf-card-rule {
+	height: 1px;
+	background: #dcdcde;
+}
+
+#pf-pro-card .pf-card-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+	font-size: 12px;
+	color: #8c8f94;
+}
+
+#pf-pro-card .pf-card-footer a {
+	color: #2271b1;
+	text-decoration: none;
+}
+
+#pf-pro-card .pf-card-footer a:hover {
+	color: #135e96;
+}
+
+/* Notices (not .notice: admin.css hides every .notice that is not .pf-notice) */
+
+#pf-pro-card .pf-card-notice {
+	padding: 10px 14px;
+	border-left: 4px solid #72aee6;
+	background: #f0f6fc;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #1d2327;
+}
+
+#pf-pro-card .pf-card-notice a {
+	margin-left: 4px;
+}
+
+#pf-pro-card .pf-card-notice-success {
+	border-left-color: #46b450;
+	background: #edfaef;
+}
+
+#pf-pro-card .pf-card-notice-warning {
+	border-left-color: #dba617;
+	background: #fff8e5;
+}
+
+#pf-pro-card .pf-card-notice-error {
+	border-left-color: #d63638;
+	background: #fcf0f1;
+}
+
+#pf-pro-card .pf-card-stub {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	padding: 8px 14px;
+	border: 1px dashed #8c8f94;
+	border-radius: 4px;
+	background: #f6f7f7;
+	font-size: 12px;
+	color: #50575e;
+}
+
+#pf-pro-card .pf-card-stub select {
+	display: inline-block;
+	margin: 0;
+	min-width: 0;
+	font-size: 12px;
+	line-height: 1.6;
+	min-height: 28px;
+}
+
+/* The offer panel: copy on the left, the preview mock on the right */
+
+#pf-pro-card .pf-card-offer {
+	display: grid;
+	grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+}
+
+#pf-pro-card .pf-card-offer-copy {
+	padding: 26px 24px 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	min-width: 0;
+}
+
+#pf-pro-card .pf-card-offer-visual {
+	background: #eff6fe;
+	border-left: 1px solid #bbdcfb;
+	padding: 26px 24px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	justify-content: center;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+#pf-pro-card .pf-card-badge {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+#pf-pro-card .pf-card-badge-dot {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #1d7a2c;
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#pf-pro-card .pf-card-badge-text {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: #1d7a2c;
+}
+
+#pf-pro-card .pf-card-mock {
+	background: #ffffff;
+	border: 1px solid #bbdcfb;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+#pf-pro-card .pf-card-mock-bar {
+	background: #f4f7fa;
+	border-bottom: 1px solid #e2e8f0;
+	padding: 7px 10px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+#pf-pro-card .pf-card-mock-bar i {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #c3c4c7;
+	flex: none;
+}
+
+#pf-pro-card .pf-card-mock-url {
+	margin-left: 2px;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 9px;
+	padding: 2px 9px;
+	font-family: ui-monospace, Menlo, Consolas, monospace;
+	font-size: 10px;
+	color: #4c5867;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+#pf-pro-card .pf-card-mock-page {
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+#pf-pro-card .pf-card-mock-skel {
+	height: 5px;
+	border-radius: 2.5px;
+	background: #e2e8f0;
+	width: 100%;
+}
+
+#pf-pro-card .pf-card-mock-page > .pf-card-mock-skel {
+	opacity: .55;
+}
+
+#pf-pro-card .pf-card-mock-preview {
+	margin-top: 2px;
+	background: #ffffff;
+	border: 1.5px solid #1b7ff7;
+	border-radius: 6px;
+	box-shadow: 0 8px 22px -10px rgba(16, 32, 56, .35);
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+}
+
+#pf-pro-card .pf-card-mock-chips {
+	display: flex;
+	gap: 6px;
+}
+
+#pf-pro-card .pf-card-mock-chips span {
+	padding: 4px 9px;
+	border-radius: 3px;
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 1.2;
+	background: #f4f7fa;
+	border: 1px solid #e2e8f0;
+	color: #4c5867;
+}
+
+#pf-pro-card .pf-card-mock-chips span.is-on {
+	background: #1b7ff7;
+	border-color: #1b7ff7;
+	color: #ffffff;
+}
+
+#pf-pro-card .pf-card-mock-rule {
+	height: 1px;
+	background: #e2e8f0;
+}
+
+#pf-pro-card .pf-card-mock-title {
+	height: 8px;
+	width: 60%;
+	border-radius: 4px;
+	background: #cbd5e1;
+}
+
+#pf-pro-card .pf-card-mock-caption {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.45;
+	color: #50575e;
+	text-align: center;
+}
+
+@media (max-width: 960px) {
+	#pf-pro-card .pf-card-offer {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	#pf-pro-card .pf-card-offer-visual {
+		border-left: 0;
+		border-top: 1px solid #bbdcfb;
+	}
+
+	#pf-pro-card .pf-card-headline-lg {
+		font-size: 26px;
+	}
+}

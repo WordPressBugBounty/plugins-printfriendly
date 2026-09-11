@@ -18,7 +18,11 @@ if (! defined('ABSPATH')) {
             <section id="tab-standard">
                 <div class="pf-bu-container">
 
-                    <?php include_once PRINTFRIENDLY_BASEPATH . '/views/pro.php'; ?>
+                    <?php if ($this->pro_card) { ?>
+                        <?php $this->pro_card->render(); ?>
+                    <?php } else { ?>
+                        <?php include_once PRINTFRIENDLY_BASEPATH . '/views/pro.php'; ?>
+                    <?php } ?>
 
                     <div class="pf-bu-block pf-bu-card">
                         <header class="pf-bu-card-header">
@@ -81,13 +85,14 @@ if (! defined('ABSPATH')) {
                                                 </div>
                                             </div>
                                             <div class="pf-bu-column pf-bu-one-sixth pf-algo-usage-css-strategy">
+                                                <?php $pf_css_fallback = $this->getVal('pf_algo_css_content', 'original'); ?>
                                                 <label><?php esc_html_e('Content Fallback Strategy', 'printfriendly'); ?></label>
                                                 <label>
-                                                    <input type="radio" id="pf_algo_css_fallback_original" name="<?php echo esc_attr($this->option_name); ?>[pf_algo_css_content]" value="original" <?php echo ( empty($this->options['pf_algo_css_content']) || $this->options['pf_algo_css_content'] === 'original' ) ? 'checked' : ''; ?>>
+                                                    <input type="radio" id="pf_algo_css_fallback_original" name="<?php echo esc_attr($this->option_name); ?>[pf_algo_css_content]" value="original" <?php echo ( empty($pf_css_fallback) || $pf_css_fallback === 'original' ) ? 'checked' : ''; ?>>
                                                     <?php esc_html_e('Use existing rules to find content', 'printfriendly'); ?>
                                                 </label>
                                                 <label>
-                                                    <input type="radio" id="pf_algo_css_fallback_error" name="<?php echo esc_attr($this->option_name); ?>[pf_algo_css_content]" value="error-message" <?php echo $this->options['pf_algo_css_content'] === 'error-message' ? 'checked' : ''; ?>>
+                                                    <input type="radio" id="pf_algo_css_fallback_error" name="<?php echo esc_attr($this->option_name); ?>[pf_algo_css_content]" value="error-message" <?php echo $pf_css_fallback === 'error-message' ? 'checked' : ''; ?>>
                                                     <?php esc_html_e('Show an error message', 'printfriendly'); ?>
                                                 </label>
                                                 <p class="description">
@@ -289,7 +294,7 @@ if (! defined('ABSPATH')) {
                             <div class="pf-label-inline" id="pf-content-position-css">
                                 <label for="pf_content_position_css" class="pf-bu-label"><?php esc_html_e('CSS', 'printfriendly'); ?></label>
                                 <div>
-                                    <textarea id="pf_content_position_css" rows="5" cols="80" name="<?php echo esc_attr($this->option_name); ?>[content_position_css]"><?php echo esc_textarea($this->options['content_position_css']); ?></textarea>
+                                    <textarea id="pf_content_position_css" rows="5" cols="80" name="<?php echo esc_attr($this->option_name); ?>[content_position_css]"><?php echo esc_textarea($this->getVal('content_position_css', '')); ?></textarea>
                                     <p>Add your custom CSS (without the <code style="display:inline;padding:3px 2px">&lt;style&gt;</code> tags) in the box above.</p>
                                 </div>
                             </div>
@@ -594,7 +599,7 @@ if (! defined('ABSPATH')) {
                                 <div class="pf-label-inline">
                                     <label for="custom_css" class="pf-bu-label"><?php esc_html_e('CSS', 'printfriendly'); ?></label>
                                     <div>
-                                        <textarea id="custom_css" class="regular-text pf-bu-textarea" rows="5" cols="80" name="<?php echo esc_attr($this->option_name); ?>[custom_css]"><?php echo esc_textarea($this->getVal('custom_css')); ?></textarea>
+                                        <textarea id="custom_css" class="regular-text pf-bu-textarea" rows="5" cols="80" name="<?php echo esc_attr($this->option_name); ?>[custom_css]"><?php echo esc_textarea($this->getVal('custom_css', '')); ?></textarea>
                                         <p class="desc"><?php echo wp_kses_post($this->get_custom_css_upgrade_message()); ?></p>
                                     </div>
                                 </div>
@@ -653,6 +658,25 @@ if (! defined('ABSPATH')) {
                         </header>
 
                         <div class="pf-bu-card-content">
+                            <?php
+                            // Which origin the plugin talks to. Worth stating outright:
+                            // a plugin pointed at the wrong origin still renders the Pro
+                            // card correctly, because the status check uses a route that
+                            // exists in both places, and only the trial button fails.
+                            if (class_exists('PrintFriendly_Pro_Card')) {
+                                ?>
+                                <p>
+                                    <strong><?php esc_html_e('API base', 'printfriendly'); ?></strong>
+                                    <code><?php echo esc_html(PrintFriendly_Pro_Card::api_base()); ?></code>
+                                    <?php if (defined('PRINTFRIENDLY_API_BASE')) { ?>
+                                        <em><?php esc_html_e('(set by PRINTFRIENDLY_API_BASE)', 'printfriendly'); ?></em>
+                                    <?php } else { ?>
+                                        <em><?php esc_html_e('(default; PRINTFRIENDLY_API_BASE is not defined)', 'printfriendly'); ?></em>
+                                    <?php } ?>
+                                </p>
+                                <?php
+                            }
+                            ?>
                             <pre><?php echo esc_html(print_r($this->options, true)); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r -- Debug-only dump, gated by WP_DEBUG. ?></pre>
                         </div>
 

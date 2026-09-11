@@ -91,8 +91,14 @@
                 multiple: false
             }).on('select', function() {
                 var attachment = pf_uploader.state().get('selection').first().toJSON();
-                $(hidden).val(attachment.url).trigger('change');
-                $(hidden + '_label').html($('<img src="' + attachment.url + '">'));
+                // `hidden` is DOM text (the data-pf-element attribute read above).
+                // .find() parses it strictly as a selector; $() would treat a value
+                // starting with '<' as HTML and build elements from it instead.
+                // The image is likewise built and given src as an attribute rather
+                // than concatenated into an HTML string.
+                $(document).find(hidden).val(attachment.url).trigger('change');
+                $(document).find(hidden + '_label')
+                    .empty().append($('<img>').attr('src', attachment.url));
             })
             .open();
         });
@@ -254,7 +260,15 @@
             e.preventDefault();
             var that = $(this);
             that.hide('slow');
-            $(that.attr('data-element')).show('slow');
+            // .find() parses the value strictly as a selector, so a value like
+            // '<img onerror=...>' can never be built into an element the way
+            // jQuery's $() would. Preferred over document.querySelectorAll,
+            // which would reject jQuery's own pseudo-selectors (:visible, :eq).
+            var target = that.attr('data-element');
+            if (target) {
+                try { $(document).find(target).show('slow'); }
+                catch (e) { /* not a valid selector; nothing to show */ }
+            }
         });
 
     }
@@ -264,7 +278,10 @@
         var text = $('#custom_text').val().replace(/(<([^>]+)>)/gi, "");
         $('#buttongroup3 span:not(.printandpdf)').text( text );
         var newText = $('#custom-text-no').prop('checked') ? '' : text;
-        $('#printfriendly-text2').html( newText );
+        // .text(), not .html(): the tag-strip on line above is a regex and
+        // regexes do not sanitise HTML (an unclosed '<img src=x onerror=...'
+        // survives it). Nothing here is meant to render as markup.
+        $('#printfriendly-text2').text( newText );
         $('#printfriendly-text2').css('color','#' + $('#text_color').val());
     }
 
