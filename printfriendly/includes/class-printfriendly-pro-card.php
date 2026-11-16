@@ -53,6 +53,14 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
         const OPT_STATUS = 'printfriendly_pro_status';
         const OPT_PREFS = 'printfriendly_pro_prefs';
         const OPT_STUB_STATE = 'printfriendly_pro_stub_state';
+        // Written by PrintFriendly_WordPress::set_defaults() on a fresh install,
+        // which runs before this class is loaded, so the name is repeated there.
+        const OPT_INSTALLED = 'printfriendly_installed_at';
+        const META_NOTICE_DISMISSED = 'printfriendly_pro_notice_dismissed';
+        const NOTICE_NONCE = 'printfriendly_pro_notice';
+        // A fresh install gets a week with the plugin before the dashboard notice.
+        // Installs that predate the option have had far longer, so they qualify now.
+        const NOTICE_DELAY = 604800;
 
         const CACHE_TTL = 43200;
         const HANDOFF_TTL = 172800;
@@ -157,6 +165,9 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
             $this->plugin_file = $plugin_file;
 
             add_action('admin_init', array($this, 'handle_admin_actions'));
+            add_action('admin_init', array($this, 'handle_notice_dismiss'));
+            add_action('admin_notices', array($this, 'render_admin_notice'));
+            add_action('admin_enqueue_scripts', array($this, 'enqueue_notice_assets'));
             add_filter('allowed_redirect_hosts', array($this, 'allow_api_host'));
             add_action('update_option_home', array($this, 'on_home_changed'), 10, 2);
         }
@@ -775,12 +786,31 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
                 'stub_states' => self::$states,
                 'stub_state' => (string) get_option(self::OPT_STUB_STATE, 'offer'),
                 'stub_url' => $this->settings_url(),
-                'price_line' => (string) apply_filters('printfriendly_pro_price_line', '$8.25 a month, billed yearly'),
-                // The amount that actually leaves the card. Stated wherever the
-                // trial is being sold, because a first charge this size arriving
-                // unannounced is a refund request rather than a surprise.
-                'charge_amount' => (string) apply_filters('printfriendly_pro_charge_amount', '$99'),
+                'price_line' => $this->price_line(),
+                'charge_amount' => $this->charge_amount(),
             );
+        }
+
+        /**
+         * The price as the offer leads with it, monthly.
+         *
+         * @return string
+         */
+        public function price_line()
+        {
+            return (string) apply_filters('printfriendly_pro_price_line', '$8.25 a month, billed yearly');
+        }
+
+        /**
+         * The amount that actually leaves the card. Stated wherever the trial is
+         * being sold, because a first charge this size arriving unannounced is a
+         * refund request rather than a surprise.
+         *
+         * @return string
+         */
+        public function charge_amount()
+        {
+            return (string) apply_filters('printfriendly_pro_charge_amount', '$99');
         }
 
         /* ------------------------------------------------------------------ */
@@ -963,6 +993,174 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
         {
             $card = $this->view_model();
             include dirname($this->plugin_file) . '/views/pro-card.php';
+        }
+
+        /* ------------------------------------------------------------------ */
+        /* Upgrade link and dashboard notice                                   */
+        /* ------------------------------------------------------------------ */
+
+        /**
+         * Whether this site has connected to a PrintFriendly account. Reads only
+         * the stored site token, so it never makes a request: these checks run on
+         * the Dashboard and Plugins screens, where calling home is not on.
+         *
+         * @return bool
+         */
+        public function is_connected()
+        {
+            return $this->site_token() !== '';
+        }
+
+        /**
+         * Whether the admin chose "Keep the free plan" on the card.
+         *
+         * @return bool
+         */
+        public function offer_declined()
+        {
+            $prefs = $this->prefs();
+            return ! empty($prefs['dismissed_offer']);
+        }
+
+        /**
+         * Where the Plugins screen's Upgrade link goes: the settings page, whose
+         * Standard tab opens with the card at the top. The page only reopens on
+         * another tab for the five seconds after a save (the pf-tab transient),
+         * and a URL fragment would not help there: admin.js passes jQuery UI an
+         * explicit `active`, which takes precedence over the hash.
+         *
+         * @return string
+         */
+        public function offer_url()
+        {
+            return $this->settings_url();
+        }
+
+        /**
+         * Whether the dashboard notice should show on this request.
+         *
+         * WordPress.org guideline 11 allows an upgrade notice if it is used
+         * sparingly and can be dismissed, so it is narrow on purpose: admins
+         * only, Dashboard and Plugins screens only, never once the site is
+         * connected or someone chose the free plan on the card, never again for
+         * a user who dismissed it, and not in a fresh install's first week.
+         *
+         * @return bool
+         */
+        public function notice_due()
+        {
+            if (! current_user_can('manage_options') || $this->is_connected() || $this->offer_declined()) {
+                return false;
+            }
+            if (get_user_meta(get_current_user_id(), self::META_NOTICE_DISMISSED, true)) {
+                return false;
+            }
+            $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+            if (! $screen || ! in_array($screen->id, array('dashboard', 'plugins'), true)) {
+                return false;
+            }
+            $installed = (int) get_option(self::OPT_INSTALLED, 0);
+            return $installed === 0 || (time() - $installed) >= self::NOTICE_DELAY;
+        }
+
+        /**
+         * The notice's dismiss link, on the page it is shown on.
+         *
+         * Built with wp_create_nonce() rather than wp_nonce_url(), which returns
+         * the URL already HTML-escaped and would be escaped twice on output.
+         *
+         * @param bool $quiet answer 204 instead of redirecting, for the X button
+         * @return string
+         */
+        private function notice_dismiss_url($quiet = false)
+        {
+            $args = array(
+                'pf_dismiss_pro_notice' => '1',
+                '_wpnonce' => wp_create_nonce(self::NOTICE_NONCE),
+            );
+            if ($quiet) {
+                $args['pf_quiet'] = '1';
+            }
+            return add_query_arg($args);
+        }
+
+        /**
+         * Remember a dismissal for this user. A plain nonced GET, like every other
+         * action on the card: "No thanks" works without JavaScript, and the X
+         * button asks for the quiet form from assets/js/pro-notice.js.
+         */
+        public function handle_notice_dismiss()
+        {
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended -- check_admin_referer() below.
+            if (! isset($_GET['pf_dismiss_pro_notice']) || ! current_user_can('manage_options')) {
+                return;
+            }
+            check_admin_referer(self::NOTICE_NONCE);
+            update_user_meta(get_current_user_id(), self::META_NOTICE_DISMISSED, time());
+            if (isset($_GET['pf_quiet'])) {
+                status_header(204);
+                exit;
+            }
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended
+            wp_safe_redirect(remove_query_arg(array('pf_dismiss_pro_notice', 'pf_quiet', '_wpnonce')));
+            exit;
+        }
+
+        /**
+         * The X button's script, only where the notice is about to render.
+         */
+        public function enqueue_notice_assets()
+        {
+            if (! $this->notice_due()) {
+                return;
+            }
+            wp_enqueue_script(
+                'pf-pro-notice',
+                plugins_url('assets/js/pro-notice.js', $this->plugin_file),
+                array(),
+                $this->plugin_version,
+                true
+            );
+        }
+
+        /**
+         * The dashboard notice: the card's offer, condensed. It starts the same
+         * handoff as the card's button, so it carries the card's disclosure and
+         * terms word for word; those strings are already translated.
+         */
+        public function render_admin_notice()
+        {
+            if (! $this->notice_due()) {
+                return;
+            }
+            /* translators: 1: price line, for example "$8.25 a month, billed yearly", 2: the yearly charge, for example "$99" */
+            $terms = sprintf(__('30-day trial, card required, nothing charged today. Then %1$s at %2$s. Cancel anytime.', 'printfriendly'), $this->price_line(), $this->charge_amount());
+            ?>
+            <div id="pf-pro-notice" class="notice notice-info is-dismissible" data-dismiss-url="<?php echo esc_url($this->notice_dismiss_url(true)); ?>">
+                <p>
+                    <strong><?php esc_html_e('Remove the ads. Keep users on your site.', 'printfriendly'); ?></strong>
+                    <?php esc_html_e('Free works forever, but readers finish on printfriendly.com, where the ads are. Pro opens the preview on your own pages, ad-free.', 'printfriendly'); ?>
+                </p>
+                <p>
+                    <a class="button" href="<?php echo esc_url($this->notice_dismiss_url()); ?>"><?php esc_html_e('No thanks', 'printfriendly'); ?></a>
+                    <a class="button" style="margin-left:6px;background:#FFC42E;border-color:#E8A700;color:#1A1400;font-weight:600;" href="<?php echo esc_url($this->action_url(array('pf_start' => 'trial'))); ?>"><?php esc_html_e('Remove ads now, free for 30 days', 'printfriendly'); ?></a>
+                </p>
+                <p class="description">
+                    <?php
+                    echo wp_kses(
+                        sprintf(
+                            /* translators: 1: the site's domain name, 2: the admin email address */
+                            __('We will set this up for %1$s using %2$s. You can change either on the next screen.', 'printfriendly'),
+                            '<strong>' . esc_html($this->site_host()) . '</strong>',
+                            '<strong>' . esc_html($this->admin_email()) . '</strong>'
+                        ),
+                        array('strong' => array())
+                    );
+                    ?>
+                    <?php echo esc_html($terms); ?>
+                </p>
+            </div>
+            <?php
         }
     }
 }

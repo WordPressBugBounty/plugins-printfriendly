@@ -5,7 +5,7 @@
     Plugin URI: https://www.printfriendly.com
     Description: PrintFriendly & PDF button for your website. Optimizes your pages and brand for print, pdf, and email.
     Name and URL are included to ensure repeat visitors and new visitors when printed versions are shared.
-    Version: 5.5.13
+    Version: 5.5.14
     Author: Print, PDF, & Email by PrintFriendly
     Author URI: https://www.printfriendly.com
     License: GPLv2 or later
@@ -46,7 +46,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          *
          * @var string
          */
-        var $plugin_version = '5.5.13';
+        var $plugin_version = '5.5.14';
         /**
          * The hook, used for text domain as well as hooks on pages and in get requests for admin.
          *
@@ -1104,8 +1104,14 @@ if (! class_exists('PrintFriendly_WordPress')) {
             }
 
             if ($file === $this_plugin) {
-                $settings_link = '<a href="options-general.php?page=' . $this->hook . '">' . __('Settings', 'printfriendly') . '</a>';
-                array_unshift($links, $settings_link); // before other links
+                $ours = array( '<a href="options-general.php?page=' . $this->hook . '">' . __('Settings', 'printfriendly') . '</a>' );
+                // Until the site connects. Reads the stored token only, so the
+                // Plugins screen never calls home; a connected site, on any plan,
+                // has already seen the card and gets nothing extra here.
+                if ($this->pro_card && ! $this->pro_card->is_connected()) {
+                    $ours[] = '<a href="' . esc_url($this->pro_card->offer_url()) . '" style="font-weight:600">' . esc_html__('Upgrade', 'printfriendly') . '</a>';
+                }
+                $links = array_merge($ours, $links); // before other links
             }
 
             return $links;
@@ -1193,6 +1199,12 @@ if (! class_exists('PrintFriendly_WordPress')) {
             $this->options['db_version'] = $this->db_version;
 
             update_option($this->option_name, $this->options);
+
+            // When this install began, so the Pro notice can give a new install a
+            // week first (PrintFriendly_Pro_Card::NOTICE_DELAY). add_option() leaves
+            // an existing value alone, and installs from before this option never
+            // get one, which the notice reads as long established.
+            add_option('printfriendly_installed_at', time(), '', 'no');
         }
 
         /**
@@ -1733,22 +1745,6 @@ if (! class_exists('PrintFriendly_WordPress')) {
         {
             $final = esc_html(wp_strip_all_tags($input));
             return $final;
-        }
-
-        /**
-         * Returns if the user is a pro user.
-         */
-        function is_pro($feature = null)
-        {
-            $licensed = true;//$this->getVal('license_status') === 'pro';
-
-            switch ($feature) {
-                case 'custom-css':
-                    // custom css needs to be available for all irrespective of the license.
-                    return true;
-            }
-
-            return $licensed;
         }
 
         function get_custom_css_tag()

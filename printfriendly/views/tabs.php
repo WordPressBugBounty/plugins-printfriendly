@@ -595,32 +595,25 @@ if (! defined('ABSPATH')) {
                         </header>
 
                         <div class="pf-bu-card-content pf-features">
-                            <?php if ($this->is_pro('custom-css')) { ?>
-                                <div class="pf-label-inline">
-                                    <label for="custom_css" class="pf-bu-label"><?php esc_html_e('CSS', 'printfriendly'); ?></label>
-                                    <div>
-                                        <textarea id="custom_css" class="regular-text pf-bu-textarea" rows="5" cols="80" name="<?php echo esc_attr($this->option_name); ?>[custom_css]"><?php echo esc_textarea($this->getVal('custom_css', '')); ?></textarea>
-                                        <p class="desc"><?php echo wp_kses_post($this->get_custom_css_upgrade_message()); ?></p>
-                                    </div>
+                            <div class="pf-label-inline">
+                                <label for="custom_css" class="pf-bu-label"><?php esc_html_e('CSS', 'printfriendly'); ?></label>
+                                <div>
+                                    <textarea id="custom_css" class="regular-text pf-bu-textarea" rows="5" cols="80" name="<?php echo esc_attr($this->option_name); ?>[custom_css]"><?php echo esc_textarea($this->getVal('custom_css', '')); ?></textarea>
+                                    <p class="desc"><?php echo wp_kses_post($this->get_custom_css_upgrade_message()); ?></p>
                                 </div>
-                                <div class="pf-label-inline" style="margin-top: 30px">
-                                    <label for="css_include_via" class="pf-bu-label"><?php esc_html_e('Include Via', 'printfriendly'); ?></label>
-                                    <div>
-                                        <select class="pf-bu-select" name="<?php echo esc_attr($this->option_name); ?>[css_include_via]" id="css_include_via">
-                                            <option value="inline_tag" <?php selected($this->options['css_include_via'], 'inline_tag'); ?>><?php esc_html_e('Inline Tag', 'printfriendly'); ?></option>
-                                            <option value="file" <?php selected($this->options['css_include_via'], 'file'); ?>><?php esc_html_e('File', 'printfriendly'); ?></option>
-                                        </select>
-                                        <?php if ($this->getVal('css_include_via') == 'file') { ?>
-                                        <p class="desc pf-bu-has-background-warning-light pf-bu-py-1 pf-bu-px-2">We recommend setting this to Inline Tag</p>
-                                        <?php } ?>
-                                    </div>
+                            </div>
+                            <div class="pf-label-inline" style="margin-top: 30px">
+                                <label for="css_include_via" class="pf-bu-label"><?php esc_html_e('Include Via', 'printfriendly'); ?></label>
+                                <div>
+                                    <select class="pf-bu-select" name="<?php echo esc_attr($this->option_name); ?>[css_include_via]" id="css_include_via">
+                                        <option value="inline_tag" <?php $this->selected('css_include_via', 'inline_tag'); ?>><?php esc_html_e('Inline Tag', 'printfriendly'); ?></option>
+                                        <option value="file" <?php $this->selected('css_include_via', 'file'); ?>><?php esc_html_e('File', 'printfriendly'); ?></option>
+                                    </select>
+                                    <?php if ('file' === $this->getVal('css_include_via')) { ?>
+                                    <p class="desc pf-bu-has-background-warning-light pf-bu-py-1 pf-bu-px-2">We recommend setting this to Inline Tag</p>
+                                    <?php } ?>
                                 </div>
-                            <?php } else { ?>
-                                <label for="custom_css_url">
-                                  <?php esc_html_e('Custom CSS URL', 'printfriendly'); ?>
-                                  <input id="custom_css_url" type="url" class="regular-text" name="<?php echo esc_attr($this->option_name); ?>[custom_css_url]" value="<?php $this->echoVal('custom_css_url'); ?>" />
-                                </label>
-                            <?php } ?>
+                            </div>
                         </div>
 
                         <div class="pf-bu-card-footer">

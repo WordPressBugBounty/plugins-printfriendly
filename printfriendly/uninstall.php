@@ -12,6 +12,8 @@ delete_option('printfriendly_pro_handoff');
 delete_option('printfriendly_pro_status');
 delete_option('printfriendly_pro_prefs');
 delete_option('printfriendly_pro_stub_state');
+delete_option('printfriendly_installed_at');
+delete_metadata('user', 0, 'printfriendly_pro_notice_dismissed', '', true);
 
 // Make sure any old options which may still lurking about get deleted as well
 delete_option('pf_button_type');

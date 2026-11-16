@@ -3,7 +3,7 @@ Contributors: printfriendly, joostdevalk, jrf, rozroz
 Tags: print, pdf, email, print button, pdf button
 Requires at least: 4.9
 Tested up to: 7.1
-Stable tag: 5.5.13
+Stable tag: 5.5.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -20,7 +20,7 @@ PrintFriendly is used by millions of people everyday to help them save paper and
 * Editable Preview - change text/image size, and delete to save even more paper and ink.
 * PDF - clickable links and custom paper sizes (A4 or Letter).
 * Reliable & Fast - Since 2009 we've optimized and improved.
-* [Compatible](https://support.printfriendly.com/wordpress/social-share-compatibility/) with **social share plugins** like Social Snap, Social Pug, NovaShare, Shareaholic
+* [Compatible](https://support.printfriendly.com/wordpress/social-share-compatibility/) with **social share plugins** like Social Snap, Hubbub (formerly Social Pug), NovaShare, Shareaholic
 
 **Benefits For Publishers**
 
@@ -28,7 +28,7 @@ PrintFriendly is used by millions of people everyday to help them save paper and
 * Professional: highly polished, stable, and supported.
 * Works on HTTP, HTTPS, and password protected sites.
 * Customization features (see below)
-* Full featured free (ad supported) version and optional [Pro Upgrade](https://www.printfriendly.com/button/pro).
+* Full featured and free forever, supported by ads on printfriendly.com. Optional [Print Button Pro](https://www.printfriendly.com/button) keeps readers on your site with no ads.
 
 
 **Customization**
@@ -41,17 +41,18 @@ PrintFriendly is used by millions of people everyday to help them save paper and
 * Use the JavaScript or non-JavaScript option.
 
 
-= Free - Ad Supported =
+= Free: readers finish on printfriendly.com =
 
-> This highly polished, professional plugin is free to use and fully functional. We maintain, improve, and offer support to all users. <br>
-> You get all this for free, and in return tasteful ads are displayed in a non-interfering way. <br>
-> Ads are only shown in the print/pdf/email confirmation window. No other ads are displayed or embedded in the content, or snuck in anywhere else.
+> The plugin is free to use and fully functional, and we maintain, improve, and support it for everyone. <br>
+> On the free plan, a reader who clicks your button finishes on printfriendly.com, where we show ads. That is how the free plan is paid for. <br>
+> No ads are ever added to your own pages.
 
 
-= Purchase an Ad-Free Subscription =
+= Print Button Pro: readers stay on your site =
 
-> Get a quality product for reasonable price. Remove the ads by purchasing an ad-free subscription. It’s cheap, easy, and straightforward. <br>
-> Purchase now at [PrintFriendly.com](https://www.printfriendly.com/button/pro)
+> With Print Button Pro, the print and PDF preview opens on your own page, with no ads, so readers never leave your site. <br>
+> $8.25 a month, billed yearly at $99. <br>
+> Start a 30-day free trial from Settings > Print Friendly & PDF in your WordPress admin: card required, nothing charged today, cancel anytime.
 
 **Localized in 30 Languages**
 
@@ -89,11 +90,7 @@ PrintFriendly and PDF is the #1 print optimization technology, **as featured in 
 
 **GDPR (General Data Protection Regulation)**
 
-PrintFriendly Pro is GDPR compliant. [Privacy Policy](https://www.printfriendly.com/privacy). We are working on making the free version GDPR complaint, but as of today it is not because stringent cookie consent requirements. If you are an EU publisher, we recommend purchasing a [PrintFriendly Pro Subscription](https://www.printfriendly.com/button/pro) for your domain.
-
-**GDPR (General Data Protection Regulation)**
-
-PrintFriendly Pro is GDPR compliant. [Privacy Policy](https://www.printfriendly.com/privacy). We are working on making the free version GDPR complaint, but as of today it is not because stringent cookie consent requirements. If you are an EU publisher, we recommend purchasing a [PrintFriendly Pro Subscription](https://www.printfriendly.com/button/pro) for your domain.
+PrintFriendly Pro is GDPR compliant. [Privacy Policy](https://www.printfriendly.com/privacy). We are working on making the free version GDPR compliant, but as of today it is not because of stringent cookie consent requirements. If you are an EU publisher, we recommend purchasing a [PrintFriendly Pro Subscription](https://www.printfriendly.com/button/pro) for your domain.
 
 = Print, PDF, Email Privacy & Data =
 
@@ -116,6 +113,8 @@ If you’re using the non-JavaScript option in the plugin, then the preview is g
 
 **Server log files get created and deleted.** Browsers and Servers pass non-personally-identifying information, such as the browser type, language, referrer, and the date/time. We may use this data to analyze how the service is being used. Non-personally-identifying aggregate data may get published, e.g., by a report on trends in the usage of the service.
 
+**Connecting your site to Print Button Pro.** Your WordPress admin sends nothing to PrintFriendly until you click to start a trial or connect your site. That click sends your site's address and the admin email address to printfriendly.com so we can set up your account; you can change either before you sign up. Once connected, the plugin checks your plan with printfriendly.com when you open its settings page, at most once every 12 hours.
+
 == Installation ==
 
 1. Search for PrintFriendly in your WordPress backend and click install, or download the printfriendly.zip file and unzip it.
@@ -133,6 +132,12 @@ Use [PrintFriendly & PDF custom class names](https://support.printfriendly.com/w
 = How to add custom header to Print and PDF =
 Use the option in the Plugin settings. [See how](https://support.printfriendly.com/wordpress/custom-header-footer/#using-plugin-settings)
 
+= What is the difference between free and Print Button Pro? =
+On the free plan, readers who click your button finish on printfriendly.com, where we show ads. With Print Button Pro, the preview opens on your own page with no ads, so readers stay on your site. Start the 30-day free trial from Settings > Print Friendly & PDF.
+
+= I already pay for PrintFriendly. Do I need to do anything? =
+Open Settings > Print Friendly & PDF, click the button on the Pro card, and sign in with the account that pays for your domain. The plugin connects to the plan you already have, and you are not charged again.
+
 
 
 == Screenshots ==
@@ -144,6 +149,11 @@ Use the option in the Plugin settings. [See how](https://support.printfriendly.c
 
 
 == Changelog ==
+
+= 5.5.14 =
+* New: until a site is connected to Print Button Pro, admins see an Upgrade link next to Settings on the Plugins screen.
+* New: a one-time notice on the Dashboard and Plugins screens offers the 30 day free trial. On a new install it waits a week, and each admin can dismiss it for good.
+* Docs: the readme explains what changes for your readers with Print Button Pro.
 
 = 5.5.13 =
 * New: the settings screen now shows your Print Button Pro plan, and you can start a 30 day free trial without leaving WordPress.
