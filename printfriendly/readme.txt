@@ -3,7 +3,7 @@ Contributors: printfriendly, joostdevalk, jrf, rozroz
 Tags: print, pdf, email, print button, pdf button
 Requires at least: 4.9
 Tested up to: 7.1
-Stable tag: 5.5.14
+Stable tag: 5.5.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,7 +113,7 @@ If you’re using the non-JavaScript option in the plugin, then the preview is g
 
 **Server log files get created and deleted.** Browsers and Servers pass non-personally-identifying information, such as the browser type, language, referrer, and the date/time. We may use this data to analyze how the service is being used. Non-personally-identifying aggregate data may get published, e.g., by a report on trends in the usage of the service.
 
-**Connecting your site to Print Button Pro.** Your WordPress admin sends nothing to PrintFriendly until you click to start a trial or connect your site. That click sends your site's address and the admin email address to printfriendly.com so we can set up your account; you can change either before you sign up. Once connected, the plugin checks your plan with printfriendly.com when you open its settings page, at most once every 12 hours.
+**Connecting your site to Print Button Pro.** Until your site is connected, your WordPress admin sends PrintFriendly one thing: your site's domain name, to ask whether it already has Pro, the same question your button asks when a reader loads a page. It asks at most once every 12 hours, and only so a site that already pays is not offered Pro. Nothing else is sent until you click to start a trial or connect your site. That click sends your site's address and the admin email address to printfriendly.com so we can set up your account; you can change either before you sign up. Once connected, the plugin checks your plan with printfriendly.com when you open its settings page, at most once every 12 hours.
 
 == Installation ==
 
@@ -136,7 +136,7 @@ Use the option in the Plugin settings. [See how](https://support.printfriendly.c
 On the free plan, readers who click your button finish on printfriendly.com, where we show ads. With Print Button Pro, the preview opens on your own page with no ads, so readers stay on your site. Start the 30-day free trial from Settings > Print Friendly & PDF.
 
 = I already pay for PrintFriendly. Do I need to do anything? =
-Open Settings > Print Friendly & PDF, click the button on the Pro card, and sign in with the account that pays for your domain. The plugin connects to the plan you already have, and you are not charged again.
+No. The plugin recognises a domain that already has Pro and shows Pro on its settings page, with no upgrade offers. If you would like to see your plan and billing there too, click Connect your account on the Pro card and sign in with the account that pays for your domain. You are not charged again.
 
 
 
@@ -149,6 +149,9 @@ Open Settings > Print Friendly & PDF, click the button on the Pro card, and sign
 
 
 == Changelog ==
+
+= 5.5.15 =
+* Fix: sites that already pay for Print Button Pro, but were never connected inside the plugin, were shown as "Free plan" and offered the free trial on the Dashboard. The plugin now recognises them: the settings page shows Pro, and there is no upgrade notice or Upgrade link.
 
 = 5.5.14 =
 * New: until a site is connected to Print Button Pro, admins see an Upgrade link next to Settings on the Plugins screen.

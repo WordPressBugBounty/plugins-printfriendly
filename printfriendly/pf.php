@@ -5,7 +5,7 @@
     Plugin URI: https://www.printfriendly.com
     Description: PrintFriendly & PDF button for your website. Optimizes your pages and brand for print, pdf, and email.
     Name and URL are included to ensure repeat visitors and new visitors when printed versions are shared.
-    Version: 5.5.14
+    Version: 5.5.15
     Author: Print, PDF, & Email by PrintFriendly
     Author URI: https://www.printfriendly.com
     License: GPLv2 or later
@@ -46,7 +46,7 @@ if (! class_exists('PrintFriendly_WordPress')) {
          *
          * @var string
          */
-        var $plugin_version = '5.5.14';
+        var $plugin_version = '5.5.15';
         /**
          * The hook, used for text domain as well as hooks on pages and in get requests for admin.
          *
@@ -1105,10 +1105,10 @@ if (! class_exists('PrintFriendly_WordPress')) {
 
             if ($file === $this_plugin) {
                 $ours = array( '<a href="options-general.php?page=' . $this->hook . '">' . __('Settings', 'printfriendly') . '</a>' );
-                // Until the site connects. Reads the stored token only, so the
-                // Plugins screen never calls home; a connected site, on any plan,
-                // has already seen the card and gets nothing extra here.
-                if ($this->pro_card && ! $this->pro_card->is_connected()) {
+                // Until the site connects, and never on a site that already has
+                // Pro without having connected (every pre-card customer). A
+                // connected site, on any plan, has seen the card already.
+                if ($this->pro_card && $this->pro_card->upgrade_link_due()) {
                     $ours[] = '<a href="' . esc_url($this->pro_card->offer_url()) . '" style="font-weight:600">' . esc_html__('Upgrade', 'printfriendly') . '</a>';
                 }
                 $links = array_merge($ours, $links); // before other links

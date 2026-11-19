@@ -32,6 +32,11 @@
  *        -> 401 when the site token was revoked
  *   Dates are unix seconds or ISO 8601. URLs must be stable site URLs that mint a
  *   fresh Stripe session on visit; the plugin caches this response for 12 hours.
+ *   GET  {base}/api/v3/domain_settings/a?hostname=   (public, no token)
+ *        -> 200 {domain_settings: {ad_free, ...}}
+ *   The question the button itself asks on every page view. Asked only by a
+ *   site that has not connected, to tell a site that already pays from a free
+ *   one (see host_is_ad_free()); cached for 12 hours.
  *
  * @package PrintFriendly_WordPress
  */
@@ -57,6 +62,11 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
         // which runs before this class is loaded, so the name is repeated there.
         const OPT_INSTALLED = 'printfriendly_installed_at';
         const META_NOTICE_DISMISSED = 'printfriendly_pro_notice_dismissed';
+        // Whether this host is already served ad-free, for a site with no site
+        // token. A transient, so a stale answer expires on its own.
+        const TRANSIENT_AD_FREE = 'printfriendly_pro_ad_free';
+        // How soon to ask again after the lookup failed.
+        const AD_FREE_RETRY = 3600;
         const NOTICE_NONCE = 'printfriendly_pro_notice';
         // A fresh install gets a week with the plugin before the dashboard notice.
         // Installs that predate the option have had far longer, so they qualify now.
@@ -79,6 +89,7 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
             'offer',
             'free',
             'free_connected',
+            'pro_unconnected',
             'trial',
             'expired',
             'expired_eligible',
@@ -107,6 +118,14 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
          * @var int
          */
         private $notice_status = 0;
+
+        /**
+         * host_is_ad_free() for this request, so the notice's two hooks and the
+         * card share one answer. Keyed by host in case home changes mid-request.
+         *
+         * @var array|null {host: string, ad_free: bool|null}
+         */
+        private $ad_free_memo = null;
 
         /**
          * Whether the v2 card is switched on.
@@ -290,12 +309,13 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
          * @param string $path
          * @param array  $data    query args for GET, JSON body for POST
          * @param array  $headers
+         * @param int    $timeout seconds
          * @return array|WP_Error decoded JSON on 2xx, WP_Error otherwise
          */
-        private function api($method, $path, $data = array(), $headers = array())
+        private function api($method, $path, $data = array(), $headers = array(), $timeout = 10)
         {
             $args = array(
-                'timeout' => 10,
+                'timeout' => $timeout,
                 'headers' => array_merge(
                     array(
                         'Accept' => 'application/json',
@@ -512,8 +532,10 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
         }
 
         /**
-         * Licence status, cached for CACHE_TTL. Never calls home without a site
-         * token, so a site that has not connected makes no request at all.
+         * Licence status, cached for CACHE_TTL. A site that has not connected
+         * sends no site token and reads no account: it only asks the public
+         * question in host_is_ad_free(), so a site that already pays is not
+         * shown as Free.
          *
          * @param bool $force
          * @return array
@@ -522,7 +544,14 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
         {
             $token = $this->site_token();
             if ($token === '') {
-                return array('plan' => 'free', 'connected' => false);
+                $ad_free = $this->host_is_ad_free($force);
+                $status = array('plan' => 'free', 'connected' => false, 'ad_free' => $ad_free);
+                if ($ad_free === null) {
+                    // Could not ask. Say so, and let the view drop its "Free plan"
+                    // pill, rather than call a site that may be paying Free.
+                    $status['unreachable'] = true;
+                }
+                return $status;
             }
 
             $cached = get_option(self::OPT_STATUS);
@@ -545,10 +574,10 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
                 if (is_wp_error($result)) {
                     $data = $result->get_error_data();
                     if (is_array($data) && isset($data['status']) && (int) $data['status'] === 401) {
-                        // The site revoked this token: back to a clean Free state.
+                        // The site revoked this token: back to a clean unconnected state.
                         delete_option(self::OPT_SITE_TOKEN);
                         delete_option(self::OPT_STATUS);
-                        return array('plan' => 'free', 'connected' => false);
+                        return array('plan' => 'free', 'connected' => false, 'ad_free' => $this->host_is_ad_free());
                     }
                     if (is_array($cached)) {
                         $cached['stale'] = true;
@@ -564,6 +593,65 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
             unset($status['stale'], $status['unreachable']);
             update_option(self::OPT_STATUS, $status, false);
             return $status;
+        }
+
+        /**
+         * Whether PrintFriendly already serves this site's readers ad-free, for
+         * a site that has not connected.
+         *
+         * Not having a site token says nothing about whether a site pays: every
+         * site that bought Pro before this card existed has none. 5.5.14 read
+         * "no token" as "free", so those customers were told they were on the
+         * free plan and offered a trial on their dashboard, and took it for a
+         * billing fault or a phishing attempt.
+         *
+         * This asks the endpoint the button itself asks on every page view,
+         * GET /api/v3/domain_settings/a?hostname=, which is public, cached at
+         * the edge, and answers ad_free for a domain with Pro or an active
+         * trial. It sends the domain name and nothing else, at most once every
+         * CACHE_TTL, or AD_FREE_RETRY after a failure.
+         *
+         * Temporary hosts are not asked, and read as not ad-free, as before:
+         * the endpoint answers ad-free for localhost, and a staging address is
+         * not the domain anyone paid for.
+         *
+         * @param bool $force skip the cached answer
+         * @return bool|null null when PrintFriendly could not be asked
+         */
+        public function host_is_ad_free($force = false)
+        {
+            if (self::stub()) {
+                return get_option(self::OPT_STUB_STATE) === 'pro_unconnected';
+            }
+            $host = $this->site_host();
+            if ($host === '' || self::looks_temporary($host)) {
+                return false;
+            }
+            if (! $force && is_array($this->ad_free_memo) && $this->ad_free_memo['host'] === $host) {
+                return $this->ad_free_memo['ad_free'];
+            }
+
+            $cached = get_transient(self::TRANSIENT_AD_FREE);
+            if (! $force && is_array($cached) && isset($cached['host']) && $cached['host'] === $host && array_key_exists('ad_free', $cached)) {
+                $ad_free = $cached['ad_free'] === null ? null : (bool) $cached['ad_free'];
+            } else {
+                // Five seconds rather than ten: this can run on a Dashboard load.
+                $result = $this->api('GET', '/api/v3/domain_settings/a', array('hostname' => rawurlencode($host)), array(), 5);
+                $ad_free = null;
+                if (is_wp_error($result)) {
+                    $this->log_api_failure('host_is_ad_free', $result);
+                } elseif (isset($result['domain_settings']['ad_free']) && is_bool($result['domain_settings']['ad_free'])) {
+                    $ad_free = $result['domain_settings']['ad_free'];
+                }
+                set_transient(
+                    self::TRANSIENT_AD_FREE,
+                    array('host' => $host, 'ad_free' => $ad_free),
+                    $ad_free === null ? self::AD_FREE_RETRY : self::CACHE_TTL
+                );
+            }
+
+            $this->ad_free_memo = array('host' => $host, 'ad_free' => $ad_free);
+            return $ad_free;
         }
 
         /**
@@ -644,6 +732,10 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
             $prefs = $this->prefs();
 
             if (empty($status['connected'])) {
+                // Already paying, just never connected: Pro, never the offer.
+                if (! empty($status['ad_free'])) {
+                    return 'pro_unconnected';
+                }
                 // A half-finished handoff is not a state of its own: the offer shows
                 // again and clicking it starts fresh, while the site resumes wherever
                 // the person stopped. The quiet retry in handle_admin_actions() still
@@ -776,6 +868,11 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
                 'eligible' => $eligible,
                 'start_url' => $this->action_url(array('pf_start' => $eligible ? 'trial' : 'buy')),
                 'buy_url' => $this->action_url(array('pf_start' => 'buy')),
+                // For a site that already pays but never connected. The same
+                // handoff: once the person signs in, printfriendly.com sees the
+                // plan their account already has for this host and connects
+                // the site without sending them to checkout.
+                'connect_url' => $this->action_url(array('pf_start' => 'buy')),
                 'stay_free_url' => $this->action_url(array('pf_stay_free' => 1)),
                 'refresh_url' => $this->action_url(array('pf_refresh' => 1)),
                 'unreachable' => ! empty($status['unreachable']),
@@ -922,7 +1019,9 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
             delete_option(self::OPT_HANDOFF);
             update_option(self::OPT_STUB_STATE, $state, false);
 
-            if ($state === 'offer' || $state === 'free') {
+            if ($state === 'offer' || $state === 'free' || $state === 'pro_unconnected') {
+                // host_is_ad_free() reads the stub state, so pro_unconnected
+                // needs nothing beyond the missing token.
                 delete_option(self::OPT_SITE_TOKEN);
                 if ($state === 'free') {
                     $this->set_pref('dismissed_offer', 1);
@@ -959,6 +1058,8 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
         {
             if ((string) $old !== (string) $new) {
                 delete_option(self::OPT_STATUS);
+                delete_transient(self::TRANSIENT_AD_FREE);
+                $this->ad_free_memo = null;
             }
         }
 
@@ -1001,14 +1102,27 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
 
         /**
          * Whether this site has connected to a PrintFriendly account. Reads only
-         * the stored site token, so it never makes a request: these checks run on
-         * the Dashboard and Plugins screens, where calling home is not on.
+         * the stored site token. Not being connected says nothing about whether
+         * the site pays; host_is_ad_free() answers that.
          *
          * @return bool
          */
         public function is_connected()
         {
             return $this->site_token() !== '';
+        }
+
+        /**
+         * Whether the Plugins screen shows its Upgrade link: until the site
+         * connects, and only on a site PrintFriendly is known not to serve
+         * ad-free. A site it could not ask gets no link, since it may already
+         * pay.
+         *
+         * @return bool
+         */
+        public function upgrade_link_due()
+        {
+            return ! $this->is_connected() && $this->host_is_ad_free() === false;
         }
 
         /**
@@ -1043,7 +1157,8 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
          * sparingly and can be dismissed, so it is narrow on purpose: admins
          * only, Dashboard and Plugins screens only, never once the site is
          * connected or someone chose the free plan on the card, never again for
-         * a user who dismissed it, and not in a fresh install's first week.
+         * a user who dismissed it, not in a fresh install's first week, and
+         * never on a site that already has Pro.
          *
          * @return bool
          */
@@ -1060,7 +1175,14 @@ if (! class_exists('PrintFriendly_Pro_Card')) {
                 return false;
             }
             $installed = (int) get_option(self::OPT_INSTALLED, 0);
-            return $installed === 0 || (time() - $installed) >= self::NOTICE_DELAY;
+            if ($installed !== 0 && (time() - $installed) < self::NOTICE_DELAY) {
+                return false;
+            }
+            // Last, because it is the only check that can make a request. Only a
+            // definite "not ad-free" shows the offer: a site we could not ask may
+            // well be paying, and pitching Pro to a paying customer reads as a
+            // billing fault or a phishing attempt.
+            return $this->host_is_ad_free() === false;
         }
 
         /**

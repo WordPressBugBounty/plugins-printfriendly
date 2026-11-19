@@ -20,6 +20,7 @@ $pf_pills = array(
     'offer' => array('free', __('Free plan', 'printfriendly')),
     'free' => array('free', __('Free plan', 'printfriendly')),
     'free_connected' => array('free', __('Free plan', 'printfriendly')),
+    'pro_unconnected' => array('pro', __('Pro', 'printfriendly')),
     'expired' => array('free', __('Free plan', 'printfriendly')),
     'expired_eligible' => array('free', __('Free plan', 'printfriendly')),
     'trial' => array('trial', __('Pro trial', 'printfriendly')),
@@ -28,6 +29,10 @@ $pf_pills = array(
     'cancelled' => array('cancelled', __('Pro ending', 'printfriendly')),
 );
 $pf_pill = isset($pf_pills[$pf_state]) ? $pf_pills[$pf_state] : $pf_pills['free'];
+// When PrintFriendly could not be reached and nothing is cached, the plan is
+// unknown: a "Free plan" pill there would tell a paying site it is on Free.
+// The unreachable notice above the card says what happened instead.
+$pf_show_pill = empty($card['unreachable']);
 
 $pf_notices = array(
     'connected' => array('success', __('Connected. Your plan status now comes straight from your PrintFriendly account.', 'printfriendly')),
@@ -103,7 +108,9 @@ $pf_trial_terms = sprintf(__('30-day trial, card required, nothing charged today
         <div class="pf-card-offer">
             <div class="pf-card-offer-copy">
                 <div class="pf-card-status">
-                    <span class="pf-card-pill pf-card-pill-<?php echo esc_attr($pf_pill[0]); ?>"><?php echo esc_html($pf_pill[1]); ?></span>
+                    <?php if ($pf_show_pill) { ?>
+                        <span class="pf-card-pill pf-card-pill-<?php echo esc_attr($pf_pill[0]); ?>"><?php echo esc_html($pf_pill[1]); ?></span>
+                    <?php } ?>
                     <span class="pf-card-context"><?php echo esc_html($pf_live_on); ?></span>
                 </div>
                 <h2 class="pf-card-headline pf-card-headline-lg"><?php esc_html_e('Remove the ads. Keep users on your site.', 'printfriendly'); ?></h2>
@@ -161,11 +168,14 @@ $pf_trial_terms = sprintf(__('30-day trial, card required, nothing charged today
         </div>
     <?php } else { ?>
         <div class="pf-card-status">
-            <span class="pf-card-pill pf-card-pill-<?php echo esc_attr($pf_pill[0]); ?>"><?php echo esc_html($pf_pill[1]); ?></span>
+            <?php if ($pf_show_pill) { ?>
+                <span class="pf-card-pill pf-card-pill-<?php echo esc_attr($pf_pill[0]); ?>"><?php echo esc_html($pf_pill[1]); ?></span>
+            <?php } ?>
             <span class="pf-card-context">
                 <?php
                 switch ($pf_state) {
                     case 'free':
+                    case 'pro_unconnected':
                         echo esc_html($pf_live_on);
                         break;
                     case 'expired':
@@ -272,6 +282,15 @@ $pf_trial_terms = sprintf(__('30-day trial, card required, nothing charged today
                 <a class="pf-card-btn pf-card-btn-secondary" href="<?php echo esc_url($card['account_url']); ?>" target="_blank" rel="noopener"><?php esc_html_e('View account', 'printfriendly'); ?></a>
             </div>
             <p class="pf-card-fine"><?php esc_html_e('Your button settings stay right here in the plugin.', 'printfriendly'); ?></p>
+
+        <?php } elseif ($pf_state === 'pro_unconnected') { ?>
+            <?php /* translators: %s: the site's domain name */ ?>
+            <h2 class="pf-card-headline"><?php echo esc_html(sprintf(__('Pro is active on %s.', 'printfriendly'), $card['host'])); ?></h2>
+            <p class="pf-card-line"><?php esc_html_e('Readers finish on your own pages, ad-free.', 'printfriendly'); ?></p>
+            <div class="pf-card-actions">
+                <a class="pf-card-btn pf-card-btn-secondary" href="<?php echo esc_url($card['connect_url']); ?>" data-busy="<?php esc_attr_e('Opening PrintFriendly', 'printfriendly'); ?>"><?php esc_html_e('Connect your account', 'printfriendly'); ?></a>
+            </div>
+            <p class="pf-card-fine"><?php esc_html_e('Optional. To see your plan and billing here, sign in with the account that pays for this site. Connecting does not charge you.', 'printfriendly'); ?></p>
 
         <?php } elseif ($pf_state === 'past_due') { ?>
             <h2 class="pf-card-headline"><?php esc_html_e('We could not charge your card.', 'printfriendly'); ?></h2>
