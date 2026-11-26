@@ -2,31 +2,31 @@
 Contributors: printfriendly, joostdevalk, jrf, rozroz
 Tags: print, pdf, email, print button, pdf button
 Requires at least: 4.9
-Tested up to: 7.1
-Stable tag: 5.5.15
+Tested up to: 7.2
+Stable tag: 5.5.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-The #1 Print, PDF, Email button. Stylish, full featured, customizable. Add custom header, footer, and more.
+Add a Print, PDF, and Email button to your posts. Readers get a clean copy of your article, without the menus, sidebars, and clutter.
 
 == Description ==
 
 **Features**
 
-PrintFriendly is used by millions of people everyday to help them save paper and ink when they print and generate PDFs (Good for the environment and peoples wallet!).
+PrintFriendly is used by millions of people every day to save paper and ink when they print and make PDFs (good for the environment and for people's wallets!).
 
 * Print, PDF, and email.
 * Stylish, highly polished, intuitive UI/UX that end-users love.
-* Editable Preview - change text/image size, and delete to save even more paper and ink.
+* Editable preview: readers can resize text and images, and delete paragraphs they don't need, to save even more paper and ink.
 * PDF - clickable links and custom paper sizes (A4 or Letter).
 * Reliable & Fast - Since 2009 we've optimized and improved.
-* [Compatible](https://support.printfriendly.com/wordpress/social-share-compatibility/) with **social share plugins** like Social Snap, Hubbub (formerly Social Pug), NovaShare, Shareaholic
+* Compatible with **social share plugins** like Social Snap, Hubbub (formerly Social Pug), NovaShare, Shareaholic
 
 **Benefits For Publishers**
 
 * Automatically detects page content so you don't have to create print.css.
 * Professional: highly polished, stable, and supported.
-* Works on HTTP, HTTPS, and password protected sites.
+* Works on HTTP and HTTPS sites. Pages behind a login or paywall need Print Button Pro, because on the free plan we fetch the page ourselves.
 * Customization features (see below)
 * Full featured and free forever, supported by ads on printfriendly.com. Optional [Print Button Pro](https://www.printfriendly.com/button) keeps readers on your site with no ads.
 
@@ -36,8 +36,8 @@ PrintFriendly is used by millions of people everyday to help them save paper and
 * Print, PDF, Email, options can be on or off.
 * Custom headers and footers for the print and PDF.
 * Button styles to choose, or use your own text and image/button.
-* [Include a copyright](https://support.printfriendly.com/wordpress/customize-content-selection/#copyright) on print and PDF.
-* [Use your own CSS](https://support.printfriendly.com/wordpress/custom-css/) for complete creative control or the print or PDF page.
+* [Include a copyright](https://www.printfriendly.com/help/print-button/content-selection) on print and PDF.
+* [Use your own CSS](https://www.printfriendly.com/help/print-button/custom-css) for complete creative control of the print or PDF page.
 * Use the JavaScript or non-JavaScript option.
 
 
@@ -56,7 +56,7 @@ PrintFriendly is used by millions of people everyday to help them save paper and
 
 **Localized in 30 Languages**
 
-PrintFriendly & PDF speaks your language! It detects (based on browser setting) the end-users language and automatically changes language. For example, if your browser is set to Spanish, then PrintFriendly will use Spanish.
+PrintFriendly & PDF speaks your language! It detects (based on browser setting) the reader's language and automatically changes language. For example, if your browser is set to Spanish, then PrintFriendly will use Spanish.
 
 A few of our supported languages:
 
@@ -79,18 +79,18 @@ A few of our supported languages:
 * Slovenian
 * Serbian
 * Swedish
-* Thailand
+* Thai
 * Turkish
 * Chinese Simplified
 * Chinese Traditional
 
-PrintFriendly and PDF is the #1 print optimization technology, **as featured in [Lifehacker](http://lifehacker.com/5272212/print-friendly-optimizes-web-pages-for-printing "PrintFriendly & PDF in Lifehacker"), [Mashable](http://mashable.com/2009/05/18/print-friendly/ "PrintFriendly & PDF in Mashable") & [makeuseof](http://www.makeuseof.com/dir/printfriendly-save-on-paper-and-ink/#comment-95052)**.
+PrintFriendly and PDF is the #1 print optimization technology, **as featured in [Lifehacker](https://lifehacker.com/print-friendly-optimizes-web-pages-for-printing-5272212 "PrintFriendly & PDF in Lifehacker"), [Mashable](https://mashable.com/archive/print-friendly "PrintFriendly & PDF in Mashable") & [MakeUseOf](https://www.makeuseof.com/dir/printfriendly-save-on-paper-and-ink/)**.
 
 **Give PrintFriendly & PDF a test drive at [PrintFriendly.com](https://www.printfriendly.com "PrintFriendly & PDF")**
 
 **GDPR (General Data Protection Regulation)**
 
-PrintFriendly Pro is GDPR compliant. [Privacy Policy](https://www.printfriendly.com/privacy). We are working on making the free version GDPR compliant, but as of today it is not because of stringent cookie consent requirements. If you are an EU publisher, we recommend purchasing a [PrintFriendly Pro Subscription](https://www.printfriendly.com/button/pro) for your domain.
+Print Button Pro is GDPR compliant. [Privacy Policy](https://www.printfriendly.com/privacy). The free version is not: it has not yet met the EU's cookie consent requirements, and we are working on that. If you publish in the EU, use [Print Button Pro](https://www.printfriendly.com/button) for your domain.
 
 = Print, PDF, Email Privacy & Data =
 
@@ -124,13 +124,13 @@ If you’re using the non-JavaScript option in the plugin, then the preview is g
 
 == Frequently Asked Questions ==
 = Print Friendly & PDF Official Support=
-[How to articles and support](https://support.printfriendly.com) for Print, PDF, and Email button by PrintFriendly
+[How-to articles and support](https://www.printfriendly.com/help/print-button/wordpress) for the Print, PDF, and Email button by PrintFriendly
 
 = Content Not Showing =
-Use [PrintFriendly & PDF custom class names](https://support.printfriendly.com/wordpress/customize-content-selection/) to include/exclude content.
+Use [PrintFriendly & PDF custom class names](https://www.printfriendly.com/help/print-button/content-selection) to include/exclude content.
 
 = How to add custom header to Print and PDF =
-Use the option in the Plugin settings. [See how](https://support.printfriendly.com/wordpress/custom-header-footer/#using-plugin-settings)
+Use the option in the Plugin settings. [See how](https://www.printfriendly.com/help/print-button/header)
 
 = What is the difference between free and Print Button Pro? =
 On the free plan, readers who click your button finish on printfriendly.com, where we show ads. With Print Button Pro, the preview opens on your own page with no ads, so readers stay on your site. Start the 30-day free trial from Settings > Print Friendly & PDF.
@@ -142,13 +142,18 @@ No. The plugin recognises a domain that already has Pro and shows Pro on its set
 
 == Screenshots ==
 
-1. Lightbox design keeps users on your page.
-2. More sharing tools, Print, PDF, Email. Plus editing tools!
-3. Fully customizable: Choose your print button, text link, or use your own text or graphic.
-4. Print Friendly & PDF speaks your language! Localized in over 30 languages.
+1. The Print and PDF button on a post.
+2. With Print Button Pro, the preview opens on your own page, with no ads. Readers can resize text and images or delete what they don't need, then print, save a PDF, or email it.
+3. Choose a button style, and where it sits on your posts and pages.
+4. Start a 30-day free trial of Print Button Pro from the plugin's settings page.
 
 
 == Changelog ==
+
+= 5.5.16 =
+* Tested against WordPress 7.2.
+* Fix: the Documentation and Learn More links in the plugin went to retired help pages. They now open the matching help center articles.
+* Docs: new screenshots and banner for the plugin page, help links that point at the current help center, and a note that pages behind a login need Print Button Pro.
 
 = 5.5.15 =
 * Fix: sites that already pay for Print Button Pro, but were never connected inside the plugin, were shown as "Free plan" and offered the free trial on the Dashboard. The plugin now recognises them: the settings page shows Pro, and there is no upgrade notice or Upgrade link.

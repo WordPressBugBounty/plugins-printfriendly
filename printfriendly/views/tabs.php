@@ -116,7 +116,7 @@ if (! defined('ABSPATH')) {
 
                         <div class="pf-bu-card-footer">
                             <p class="pf-bu-card-footer-item"><?php esc_html_e('Change this setting if your content is not showing in the preview.', 'printfriendly'); ?></p>
-                            <p class="pf-bu-card-footer-item"><a href="https://support.printfriendly.com/wordpress/customize-content-selection/" target="_new"><?php esc_html_e('Documentation', 'printfriendly'); ?></a></p>
+                            <p class="pf-bu-card-footer-item"><a href="https://www.printfriendly.com/help/print-button/content-selection" target="_blank" rel="noopener"><?php esc_html_e('Documentation', 'printfriendly'); ?></a></p>
                         </div>
                     </div>
 
@@ -496,7 +496,7 @@ if (! defined('ABSPATH')) {
                         </div>
 
                         <div class="pf-bu-card-footer">
-                            <p class="pf-bu-card-footer-item"><a href="https://support.printfriendly.com/wordpress/custom-header-footer/" target="_new"><?php esc_html_e('Documentation', 'printfriendly'); ?></a></p>
+                            <p class="pf-bu-card-footer-item"><a href="https://www.printfriendly.com/help/print-button/header" target="_blank" rel="noopener"><?php esc_html_e('Documentation', 'printfriendly'); ?></a></p>
                         </div>
                     </div>
 
@@ -621,7 +621,7 @@ if (! defined('ABSPATH')) {
                                 <div>
                                     <p>Customize the styles of the printed/pdf page using your own CSS</p>
                                     <p>Add your custom CSS (without the <code style="display:inline;padding:3px 2px">&lt;style&gt;</code> tags) in the box above.
-                                    <a href="https://support.printfriendly.com/wordpress/custom-css/" target="_new">Learn More</a>
+                                    <a href="https://www.printfriendly.com/help/print-button/custom-css" target="_blank" rel="noopener">Learn More</a>
                                     </p>
                                 </div>
                             </div>
